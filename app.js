@@ -20,7 +20,9 @@ async function build() {
     logger: true,
   });
   await app.register(require('@fastify/formbody'));
+  await app.register(require('./plugins/auth'));
   await app.register(require('./routes/legacy'), {isProduction});
+  await app.register(require('./routes'));
   return app;
 }
 
