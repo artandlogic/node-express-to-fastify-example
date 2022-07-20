@@ -13,7 +13,6 @@ async function build() {
   require('./models/User');
   require('./models/Article');
   require('./models/Comment');
-  require('./config/passport');
 
   // Create global app object
   const app = require('fastify')({
@@ -21,7 +20,6 @@ async function build() {
   });
   await app.register(require('@fastify/formbody'));
   await app.register(require('./plugins/auth'));
-  await app.register(require('./routes/legacy'), {isProduction});
   await app.register(require('./routes'));
   return app;
 }

@@ -40,4 +40,74 @@ module.exports = async function (fastify, opts) {
       }
     },
   });
+
+  fastify.route({
+    method: 'POST',
+    url: '/:username/follow',
+    onRequest: [fastify.authenticated],
+    schema: {
+      params: {
+        type: "object",
+        properties: {
+          username: {
+            type: "string",
+            minLength: 1,
+          },
+        },
+        required: ["username"],
+      },
+    },
+    handler: async function(request, reply) {
+      const [user, profileUser] = await Promise.all([
+        User.findById(request.payload.id),
+        User.findOne({username: request.params.username}),
+      ]);
+      if (!user) {
+        reply.code(401).send();
+        return;
+      }
+      if (!profileUser) {
+        reply.code(404).send();
+        return;
+      }
+
+      await user.follow(profileUser._id);
+      return {profile: profileUser.toProfileJSONFor(user)};
+    },
+  });
+
+  fastify.route({
+    method: 'DELETE',
+    url: '/:username/follow',
+    onRequest: [fastify.authenticated],
+    schema: {
+      params: {
+        type: "object",
+        properties: {
+          username: {
+            type: "string",
+            minLength: 1,
+          },
+        },
+        required: ["username"],
+      },
+    },
+    handler: async function(request, reply) {
+      const [user, profileUser] = await Promise.all([
+        User.findById(request.payload.id),
+        User.findOne({username: request.params.username}),
+      ]);
+      if (!user) {
+        reply.code(401).send();
+        return;
+      }
+      if (!profileUser) {
+        reply.code(404).send();
+        return;
+      }
+
+      await user.unfollow(profileUser._id);
+      return {profile: profileUser.toProfileJSONFor(user)};
+    },
+  });
 }
