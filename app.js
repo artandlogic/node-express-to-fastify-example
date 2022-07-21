@@ -1,9 +1,7 @@
-var isProduction = process.env.NODE_ENV === 'production';
-
-async function build() {
+async function build(opts={}) {
   const mongoose = require('mongoose');
 
-  if(isProduction){
+  if(['production', 'test'].includes(process.env.NODE_ENV)) {
     mongoose.connect(process.env.MONGODB_URI);
   } else {
     mongoose.connect('mongodb://localhost/conduit');
@@ -15,17 +13,14 @@ async function build() {
   require('./models/Comment');
 
   // Create global app object
-  const app = require('fastify')({
-    logger: true,
-  });
+  const app = require('fastify')({opts});
+  app.addHook('onClose', async () => {
+    await mongoose.disconnect();
+  })
   await app.register(require('@fastify/formbody'));
   await app.register(require('./plugins/auth'));
   await app.register(require('./routes'));
   return app;
 }
 
-build()
-  .then(app => app.listen({port: 3000}))
-  .then((address) => {
-    console.log('Listening on ' + address);
-  }).catch(console.log);
+module.exports = build;
